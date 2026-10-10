@@ -1,0 +1,97 @@
+name: Build EU Country Tiles
+
+on:
+  workflow_dispatch:
+    inputs:
+      country:
+        description: 'Country to build (e.g. uk, fr, de) or "all"'
+        required: true
+        default: 'all'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - abbr: uk
+            osm: great-britain
+            subdir: europe
+            bounds: "-5.7,49.9,1.8,58.7"
+          - abbr: fr
+            osm: france
+            subdir: europe
+            bounds: "-5.1,41.3,9.6,51.1"
+          - abbr: de
+            osm: germany
+            subdir: europe
+            bounds: "5.9,47.3,15.0,55.1"
+          - abbr: es
+            osm: spain
+            subdir: europe
+            bounds: "-9.3,35.9,4.3,43.8"
+          - abbr: it
+            osm: italy
+            subdir: europe
+            bounds: "6.6,35.5,18.5,47.1"
+          - abbr: nl
+            osm: netherlands
+            subdir: europe
+            bounds: "3.4,50.8,7.2,53.6"
+          - abbr: be
+            osm: belgium
+            subdir: europe
+            bounds: "2.5,49.5,6.4,51.5"
+          - abbr: ch
+            osm: switzerland
+            subdir: europe
+            bounds: "6.0,45.8,10.5,47.8"
+          - abbr: at
+            osm: austria
+            subdir: europe
+            bounds: "9.5,46.4,17.2,49.0"
+          - abbr: pl
+            osm: poland
+            subdir: europe
+            bounds: "14.1,49.0,24.2,55.0"
+    steps:
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Download Planetiler
+        run: |
+          curl -L -o planetiler.jar https://github.com/onthegomap/planetiler/releases/download/v0.8.0/planetiler.jar
+
+      - name: Download data sources
+        run: |
+          mkdir -p data/sources
+          cd data/sources
+          curl -L -o lake_centerline.shp.zip https://dev.maptiler.download/geodata/omt/lake_centerline.shp.zip
+          curl -L -o natural_earth_vector.sqlite.zip https://dev.maptiler.download/geodata/omt/natural_earth_vector.sqlite.zip
+          curl -L -o water-polygons-split-3857.zip https://osmdata.openstreetmap.de/download/water-polygons-split-3857.zip
+          cd ../..
+
+      - name: Download OSM data
+        if: ${{ github.event.inputs.country == 'all' || github.event.inputs.country == matrix.abbr }}
+        run: |
+          curl -L -o ${{ matrix.abbr }}.osm.pbf https://download.geofabrik.de/${{ matrix.subdir }}/${{ matrix.osm }}-latest.osm.pbf
+
+      - name: Build tiles
+        if: ${{ github.event.inputs.country == 'all' || github.event.inputs.country == matrix.abbr }}
+        run: |
+          java -Xmx6g -jar planetiler.jar \
+            --osm_path=${{ matrix.abbr }}.osm.pbf \
+            --bounds=${{ matrix.bounds }} \
+            --output=eu-${{ matrix.abbr }}.pmtiles \
+            --download_dir=data/sources \
+            --force
+
+      - name: Upload artifact
+        if: ${{ github.event.inputs.country == 'all' || github.event.inputs.country == matrix.abbr }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: eu-${{ matrix.abbr }}.pmtiles
+          path: eu-${{ matrix.abbr }}.pmtiles
