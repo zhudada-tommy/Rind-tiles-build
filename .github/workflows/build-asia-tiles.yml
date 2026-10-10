@@ -1,0 +1,65 @@
+name: Build Asia Country Tiles
+
+on:
+  workflow_dispatch:
+    inputs:
+      country:
+        description: 'Country to build (e.g. jp, kr) or "all"'
+        required: true
+        default: 'all'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - abbr: jp
+            osm: japan
+            subdir: asia
+            bounds: "129.0,31.0,146.0,45.5"
+          - abbr: kr
+            osm: south-korea
+            subdir: asia
+            bounds: "126.0,34.5,129.6,38.6"
+    steps:
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Download Planetiler
+        run: |
+          curl -L -o planetiler.jar https://github.com/onthegomap/planetiler/releases/download/v0.8.0/planetiler.jar
+
+      - name: Download data sources
+        run: |
+          mkdir -p data/sources
+          cd data/sources
+          curl -L -o lake_centerline.shp.zip https://dev.maptiler.download/geodata/omt/lake_centerline.shp.zip
+          curl -L -o natural_earth_vector.sqlite.zip https://dev.maptiler.download/geodata/omt/natural_earth_vector.sqlite.zip
+          curl -L -o water-polygons-split-3857.zip https://osmdata.openstreetmap.de/download/water-polygons-split-3857.zip
+          cd ../..
+
+      - name: Download OSM data
+        if: ${{ github.event.inputs.country == 'all' || github.event.inputs.country == matrix.abbr }}
+        run: |
+          curl -L -o ${{ matrix.abbr }}.osm.pbf https://download.geofabrik.de/${{ matrix.subdir }}/${{ matrix.osm }}-latest.osm.pbf
+
+      - name: Build tiles
+        if: ${{ github.event.inputs.country == 'all' || github.event.inputs.country == matrix.abbr }}
+        run: |
+          java -Xmx6g -jar planetiler.jar \
+            --osm_path=${{ matrix.abbr }}.osm.pbf \
+            --bounds=${{ matrix.bounds }} \
+            --output=as-${{ matrix.abbr }}.pmtiles \
+            --download_dir=data/sources \
+            --force
+
+      - name: Upload artifact
+        if: ${{ github.event.inputs.country == 'all' || github.event.inputs.country == matrix.abbr }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: as-${{ matrix.abbr }}.pmtiles
+          path: as-${{ matrix.abbr }}.pmtiles
