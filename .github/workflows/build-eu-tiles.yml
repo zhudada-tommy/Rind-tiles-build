@@ -54,6 +54,74 @@ jobs:
             osm: poland
             subdir: europe
             bounds: "14.1,49.0,24.2,55.0"
+          - abbr: pt
+            osm: portugal
+            subdir: europe
+            bounds: "-9.5,36.9,-6.2,42.2"
+          - abbr: se
+            osm: sweden
+            subdir: europe
+            bounds: "11.0,55.3,24.2,69.1"
+          - abbr: no
+            osm: norway
+            subdir: europe
+            bounds: "4.6,57.9,31.2,71.2"
+          - abbr: dk
+            osm: denmark
+            subdir: europe
+            bounds: "8.1,54.6,15.2,57.8"
+          - abbr: fi
+            osm: finland
+            subdir: europe
+            bounds: "19.1,59.7,31.6,70.1"
+          - abbr: ie
+            osm: ireland-and-northern-ireland
+            subdir: europe
+            bounds: "-10.2,51.4,-6.0,55.4"
+          - abbr: gr
+            osm: greece
+            subdir: europe
+            bounds: "19.4,34.8,29.6,41.8"
+          - abbr: cz
+            osm: czech-republic
+            subdir: europe
+            bounds: "12.1,48.6,18.9,51.1"
+          - abbr: hu
+            osm: hungary
+            subdir: europe
+            bounds: "16.1,45.7,23.0,48.6"
+          - abbr: ro
+            osm: romania
+            subdir: europe
+            bounds: "20.3,43.6,30.0,48.3"
+          - abbr: hr
+            osm: croatia
+            subdir: europe
+            bounds: "13.5,42.4,19.4,46.6"
+          - abbr: sk
+            osm: slovakia
+            subdir: europe
+            bounds: "16.8,47.7,22.6,49.6"
+          - abbr: si
+            osm: slovenia
+            subdir: europe
+            bounds: "13.4,45.4,16.6,46.9"
+          - abbr: bg
+            osm: bulgaria
+            subdir: europe
+            bounds: "22.4,41.2,28.6,44.2"
+          - abbr: ee
+            osm: estonia
+            subdir: europe
+            bounds: "21.8,57.5,28.2,59.7"
+          - abbr: lv
+            osm: latvia
+            subdir: europe
+            bounds: "20.9,55.7,28.2,58.1"
+          - abbr: lt
+            osm: lithuania
+            subdir: europe
+            bounds: "20.9,53.9,26.8,56.5"
     steps:
       - name: Set up Java 21
         uses: actions/setup-java@v4
