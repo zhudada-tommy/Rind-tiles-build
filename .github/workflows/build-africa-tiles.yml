@@ -1,0 +1,427 @@
+# 第 4 批剩余国家：非洲 56 + 中美洲/加勒比 11 + 剩余欧洲 22 + 俄罗斯 + 格陵兰
+# 产物统一用 af- 前缀；俄罗斯 PBF 在 Geofabrik 顶层，用 pbf_url 覆盖
+name: Build Africa & Remaining Country Tiles
+
+on:
+  workflow_dispatch:
+    inputs:
+      country:
+        description: 'Country to build (e.g. dz, ng) or "all"'
+        required: true
+        default: 'all'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - abbr: dz
+            osm: algeria
+            subdir: africa
+            bounds: "-9.2,18.5,12.5,37.6"
+          - abbr: ng
+            osm: nigeria
+            subdir: africa
+            bounds: "2.2,3.8,15.2,14.4"
+          - abbr: tz
+            osm: tanzania
+            subdir: africa
+            bounds: "28.8,-12.2,40.9,-0.5"
+          - abbr: cd
+            osm: congo-democratic-republic
+            subdir: africa
+            bounds: "11.7,-14.0,31.8,5.9"
+          - abbr: za
+            osm: south-africa
+            subdir: africa
+            bounds: "16.0,-47.5,38.5,-21.6"
+          - abbr: mg
+            osm: madagascar
+            subdir: africa
+            bounds: "42.7,-26.1,51.0,-11.4"
+          - abbr: ug
+            osm: uganda
+            subdir: africa
+            bounds: "29.0,-2.0,35.5,4.7"
+          - abbr: ke
+            osm: kenya
+            subdir: africa
+            bounds: "33.4,-5.2,42.4,5.5"
+          - abbr: ma
+            osm: morocco
+            subdir: africa
+            bounds: "-17.5,20.9,-0.5,36.4"
+          - abbr: zm
+            osm: zambia
+            subdir: africa
+            bounds: "21.5,-18.6,34.2,-7.7"
+          - abbr: mz
+            osm: mozambique
+            subdir: africa
+            bounds: "29.7,-27.4,41.3,-10.0"
+          - abbr: cm
+            osm: cameroon
+            subdir: africa
+            bounds: "8.0,1.2,16.7,13.6"
+          - abbr: sd
+            osm: sudan
+            subdir: africa
+            bounds: "21.3,8.2,39.1,22.7"
+          - abbr: eg
+            osm: egypt
+            subdir: africa
+            bounds: "24.2,21.5,37.4,32.2"
+          - abbr: ml
+            osm: mali
+            subdir: africa
+            bounds: "-12.8,9.6,4.7,25.5"
+          - abbr: so
+            osm: somalia
+            subdir: africa
+            bounds: "40.5,-2.2,51.9,12.5"
+          - abbr: mw
+            osm: malawi
+            subdir: africa
+            bounds: "32.2,-17.6,36.4,-8.9"
+          - abbr: et
+            osm: ethiopia
+            subdir: africa
+            bounds: "32.5,2.9,48.5,15.4"
+          - abbr: ss
+            osm: south-sudan
+            subdir: africa
+            bounds: "23.6,3.0,36.4,12.7"
+          - abbr: td
+            osm: chad
+            subdir: africa
+            bounds: "12.9,7.0,24.5,23.9"
+          - abbr: ls
+            osm: lesotho
+            subdir: africa
+            bounds: "26.5,-31.2,29.9,-28.1"
+          - abbr: gh
+            osm: ghana
+            subdir: africa
+            bounds: "-3.8,4.2,1.7,11.7"
+          - abbr: gn
+            osm: guinea
+            subdir: africa
+            bounds: "-15.6,6.7,-7.2,13.2"
+          - abbr: sngm
+            osm: senegal-and-gambia
+            subdir: africa
+            bounds: "-18.0,11.8,-10.9,17.2"
+          - abbr: cf
+            osm: central-african-republic
+            subdir: africa
+            bounds: "13.9,1.7,27.9,11.5"
+          - abbr: bw
+            osm: botswana
+            subdir: africa
+            bounds: "19.5,-27.4,29.9,-17.3"
+          - abbr: ao
+            osm: angola
+            subdir: africa
+            bounds: "11.2,-18.5,24.6,-3.9"
+          - abbr: ci
+            osm: ivory-coast
+            subdir: africa
+            bounds: "-9.1,3.8,-2.0,11.2"
+          - abbr: bf
+            osm: burkina-faso
+            subdir: africa
+            bounds: "-6.0,8.9,2.9,15.6"
+          - abbr: tn
+            osm: tunisia
+            subdir: africa
+            bounds: "7.0,29.7,12.1,37.8"
+          - abbr: ne
+            osm: niger
+            subdir: africa
+            bounds: "-0.3,11.2,16.5,24.0"
+          - abbr: ly
+            osm: libya
+            subdir: africa
+            bounds: "8.8,19.0,25.7,33.7"
+          - abbr: tg
+            osm: togo
+            subdir: africa
+            bounds: "-0.7,5.6,2.3,11.6"
+          - abbr: ic
+            osm: canary-islands
+            subdir: africa
+            bounds: "-18.7,27.1,-12.8,30.0"
+          - abbr: na
+            osm: namibia
+            subdir: africa
+            bounds: "11.2,-29.5,25.8,-16.5"
+          - abbr: bj
+            osm: benin
+            subdir: africa
+            bounds: "0.3,5.7,4.3,12.9"
+          - abbr: sl
+            osm: sierra-leone
+            subdir: africa
+            bounds: "-13.8,6.4,-9.8,10.5"
+          - abbr: bi
+            osm: burundi
+            subdir: africa
+            bounds: "28.5,-5.0,31.3,-1.8"
+          - abbr: lr
+            osm: liberia
+            subdir: africa
+            bounds: "-12.0,3.8,-6.9,9.1"
+          - abbr: cg
+            osm: congo-brazzaville
+            subdir: africa
+            bounds: "10.6,-5.5,19.1,4.2"
+          - abbr: mr
+            osm: mauritania
+            subdir: africa
+            bounds: "-17.6,14.2,-4.3,27.8"
+          - abbr: sz
+            osm: swaziland
+            subdir: africa
+            bounds: "30.3,-27.8,32.6,-25.2"
+          - abbr: ga
+            osm: gabon
+            subdir: africa
+            bounds: "8.2,-4.4,15.0,2.8"
+          - abbr: mu
+            osm: mauritius
+            subdir: africa
+            bounds: "56.0,-21.0,64.0,-9.8"
+          - abbr: cv
+            osm: cape-verde
+            subdir: africa
+            bounds: "-25.9,14.3,-22.2,17.7"
+          - abbr: gw
+            osm: guinea-bissau
+            subdir: africa
+            bounds: "-17.2,10.4,-13.2,13.2"
+          - abbr: gq
+            osm: equatorial-guinea
+            subdir: africa
+            bounds: "5.1,-2.0,11.8,4.3"
+          - abbr: dj
+            osm: djibouti
+            subdir: africa
+            bounds: "41.2,10.4,43.9,13.2"
+          - abbr: km
+            osm: comoros
+            subdir: africa
+            bounds: "42.7,-12.9,45.0,-10.9"
+          - abbr: sc
+            osm: seychelles
+            subdir: africa
+            bounds: "45.7,-10.3,56.8,-3.3"
+          - abbr: st
+            osm: sao-tome-and-principe
+            subdir: africa
+            bounds: "6.0,-0.5,8.0,2.2"
+          - abbr: shn
+            osm: saint-helena-ascension-and-tristan-da-cunha
+            subdir: africa
+            bounds: "-14.9,-40.9,-5.2,-7.4"
+          - abbr: er
+            osm: eritrea
+            subdir: africa
+            bounds: "35.9,11.9,43.6,18.5"
+          - abbr: zw
+            osm: zimbabwe
+            subdir: africa
+            bounds: "24.7,-22.9,33.5,-15.1"
+          - abbr: rw
+            osm: rwanda
+            subdir: africa
+            bounds: "28.4,-3.3,31.4,-0.6"
+          - abbr: eh
+            osm: western-sahara
+            subdir: africa
+            bounds: "-17.6,20.3,-8.2,28.2"
+          - abbr: gt
+            osm: guatemala
+            subdir: central-america
+            bounds: "-92.7,13.2,-87.7,18.3"
+          - abbr: htdo
+            osm: haiti-and-domrep
+            subdir: central-america
+            bounds: "-75.0,17.0,-67.8,20.6"
+          - abbr: hn
+            osm: honduras
+            subdir: central-america
+            bounds: "-89.9,12.5,-82.6,17.9"
+          - abbr: cu
+            osm: cuba
+            subdir: central-america
+            bounds: "-85.4,19.3,-73.6,23.8"
+          - abbr: ni
+            osm: nicaragua
+            subdir: central-america
+            bounds: "-88.2,10.2,-82.2,15.5"
+          - abbr: cr
+            osm: costa-rica
+            subdir: central-america
+            bounds: "-87.6,5.0,-82.1,11.7"
+          - abbr: jm
+            osm: jamaica
+            subdir: central-america
+            bounds: "-78.9,17.2,-75.7,19.0"
+          - abbr: pa
+            osm: panama
+            subdir: central-america
+            bounds: "-83.6,6.7,-76.7,10.1"
+          - abbr: sv
+            osm: el-salvador
+            subdir: central-america
+            bounds: "-90.6,12.7,-87.2,14.9"
+          - abbr: bz
+            osm: belize
+            subdir: central-america
+            bounds: "-89.7,15.4,-87.3,19.0"
+          - abbr: bs
+            osm: bahamas
+            subdir: central-america
+            bounds: "-80.1,20.4,-72.2,27.4"
+          - abbr: ua
+            osm: ukraine
+            subdir: europe
+            bounds: "21.6,44.7,40.7,52.9"
+          - abbr: tr
+            osm: turkey
+            subdir: europe
+            bounds: "25.2,35.3,45.3,42.6"
+          - abbr: by
+            osm: belarus
+            subdir: europe
+            bounds: "22.7,50.7,33.2,56.7"
+          - abbr: rs
+            osm: serbia
+            subdir: europe
+            bounds: "18.3,41.7,23.5,46.7"
+          - abbr: ba
+            osm: bosnia-herzegovina
+            subdir: europe
+            bounds: "15.2,42.1,20.1,45.8"
+          - abbr: md
+            osm: moldova
+            subdir: europe
+            bounds: "26.1,45.0,30.6,49.0"
+          - abbr: ge
+            osm: georgia
+            subdir: europe
+            bounds: "39.5,40.5,47.2,44.1"
+          - abbr: is
+            osm: iceland
+            subdir: europe
+            bounds: "-25.0,62.9,-13.0,67.1"
+          - abbr: al
+            osm: albania
+            subdir: europe
+            bounds: "18.8,39.1,21.5,43.2"
+          - abbr: lu
+            osm: luxembourg
+            subdir: europe
+            bounds: "5.2,48.9,7.0,50.7"
+          - abbr: cy
+            osm: cyprus
+            subdir: europe
+            bounds: "31.8,34.1,35.1,36.2"
+          - abbr: me
+            osm: montenegro
+            subdir: europe
+            bounds: "17.9,41.4,20.9,44.0"
+          - abbr: xk
+            osm: kosovo
+            subdir: europe
+            bounds: "19.5,41.3,22.3,43.8"
+          - abbr: mk
+            osm: macedonia
+            subdir: europe
+            bounds: "19.9,40.3,23.5,42.9"
+          - abbr: azo
+            osm: azores
+            subdir: europe
+            bounds: "-31.8,36.4,-24.4,40.3"
+          - abbr: mt
+            osm: malta
+            subdir: europe
+            bounds: "13.7,35.3,15.1,36.6"
+          - abbr: fo
+            osm: faroe-islands
+            subdir: europe
+            bounds: "-8.1,60.9,-5.8,62.9"
+          - abbr: im
+            osm: isle-of-man
+            subdir: europe
+            bounds: "-5.3,53.6,-3.8,54.9"
+          - abbr: ggje
+            osm: guernsey-jersey
+            subdir: europe
+            bounds: "-3.2,48.7,-1.5,50.2"
+          - abbr: ad
+            osm: andorra
+            subdir: europe
+            bounds: "0.9,41.9,2.3,43.1"
+          - abbr: li
+            osm: liechtenstein
+            subdir: europe
+            bounds: "9.0,46.6,10.1,47.8"
+          - abbr: mc
+            osm: monaco
+            subdir: europe
+            bounds: "6.9,43.2,7.9,44.3"
+          - abbr: ru
+            osm: russia
+            pbf_url: https://download.geofabrik.de/russia-latest.osm.pbf
+            bounds: "-180.0,40.7,180.0,82.4"
+          - abbr: gl
+            osm: greenland
+            subdir: north-america
+            bounds: "-73.6,59.3,-10.9,84.1"
+    steps:
+      - name: Free disk space (large extracts, e.g. cn/in/id ~1.5 GB each)
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL && df -h .
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Download Planetiler
+        run: |
+          curl -L -o planetiler.jar https://github.com/onthegomap/planetiler/releases/download/v0.8.0/planetiler.jar
+
+      - name: Download data sources
+        run: |
+          mkdir -p data/sources
+          cd data/sources
+          curl -L -o lake_centerline.shp.zip https://dev.maptiler.download/geodata/omt/lake_centerline.shp.zip
+          curl -L -o natural_earth_vector.sqlite.zip https://dev.maptiler.download/geodata/omt/natural_earth_vector.sqlite.zip
+          curl -L -o water-polygons-split-3857.zip https://osmdata.openstreetmap.de/download/water-polygons-split-3857.zip
+          cd ../..
+
+      - name: Download OSM data
+        if: ${{ github.event.inputs.country == 'all' || github.event.inputs.country == matrix.abbr }}
+        run: |
+          curl -L -o ${{ matrix.abbr }}.osm.pbf ${{ matrix.pbf_url || format('https://download.geofabrik.de/{0}/{1}-latest.osm.pbf', matrix.subdir, matrix.osm) }}
+
+      - name: Build tiles
+        if: ${{ github.event.inputs.country == 'all' || github.event.inputs.country == matrix.abbr }}
+        run: |
+          java -Xmx6g -jar planetiler.jar \
+            --osm_path=${{ matrix.abbr }}.osm.pbf \
+            --bounds=${{ matrix.bounds }} \
+            --output=af-${{ matrix.abbr }}.pmtiles \
+            --download_dir=data/sources \
+            --force
+
+      - name: Upload artifact
+        if: ${{ github.event.inputs.country == 'all' || github.event.inputs.country == matrix.abbr }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: af-${{ matrix.abbr }}.pmtiles
+          path: af-${{ matrix.abbr }}.pmtiles
