@@ -1,0 +1,207 @@
+# 亚洲其余 36 国（不含日韩，日韩在 build-asia-tiles.yml）
+# bounds 来源：本地 Natural Earth 10m rtree bbox，外扩 0.5 度
+name: Build Asia (Rest) Country Tiles
+
+on:
+  workflow_dispatch:
+    inputs:
+      country:
+        description: 'Country to build (e.g. cn, in) or "all"'
+        required: true
+        default: 'all'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - abbr: cn
+            osm: china
+            subdir: asia
+            bounds: "73.1,15.3,135.3,54.1"
+          - abbr: in
+            osm: india
+            subdir: asia
+            bounds: "67.6,6.2,97.9,36.0"
+          - abbr: id
+            osm: indonesia
+            subdir: asia
+            bounds: "94.5,-11.4,141.5,6.4"
+          - abbr: ph
+            osm: philippines
+            subdir: asia
+            bounds: "116.5,4.2,127.1,21.6"
+          - abbr: np
+            osm: nepal
+            subdir: asia
+            bounds: "79.5,25.8,88.7,30.9"
+          - abbr: bd
+            osm: bangladesh
+            subdir: asia
+            bounds: "87.5,20.2,93.1,27.1"
+          - abbr: th
+            osm: thailand
+            subdir: asia
+            bounds: "96.9,5.1,106.2,20.9"
+          - abbr: vn
+            osm: vietnam
+            subdir: asia
+            bounds: "101.6,8.1,110.0,23.9"
+          - abbr: mm
+            osm: myanmar
+            subdir: asia
+            bounds: "91.7,9.3,101.7,29.0"
+          - abbr: gcc
+            osm: gcc-states
+            subdir: asia
+            bounds: "34.1,15.9,60.3,32.6"
+          - abbr: msb
+            osm: malaysia-singapore-brunei
+            subdir: asia
+            bounds: "99.1,0.4,119.8,7.9"
+          - abbr: ir
+            osm: iran
+            subdir: asia
+            bounds: "43.5,24.6,63.8,40.3"
+          - abbr: kz
+            osm: kazakhstan
+            subdir: asia
+            bounds: "46.0,40.1,87.8,55.9"
+          - abbr: pk
+            osm: pakistan
+            subdir: asia
+            bounds: "60.3,23.2,77.5,37.6"
+          - abbr: lk
+            osm: sri-lanka
+            subdir: asia
+            bounds: "79.2,5.4,82.4,10.3"
+          - abbr: af
+            osm: afghanistan
+            subdir: asia
+            bounds: "60.0,28.9,75.4,39.0"
+          - abbr: mn
+            osm: mongolia
+            subdir: asia
+            bounds: "87.2,41.1,120.4,52.6"
+          - abbr: la
+            osm: laos
+            subdir: asia
+            bounds: "99.6,13.4,108.2,23.0"
+          - abbr: am
+            osm: armenia
+            subdir: asia
+            bounds: "42.9,38.4,47.1,41.8"
+          - abbr: lb
+            osm: lebanon
+            subdir: asia
+            bounds: "34.6,32.6,37.1,35.2"
+          - abbr: tj
+            osm: tajikistan
+            subdir: asia
+            bounds: "66.8,36.2,75.7,41.5"
+          - abbr: az
+            osm: azerbaijan
+            subdir: asia
+            bounds: "44.3,37.9,51.1,42.4"
+          - abbr: ye
+            osm: yemen
+            subdir: asia
+            bounds: "42.0,11.6,55.0,19.5"
+          - abbr: kh
+            osm: cambodia
+            subdir: asia
+            bounds: "101.8,9.9,108.1,15.2"
+          - abbr: jo
+            osm: jordan
+            subdir: asia
+            bounds: "34.4,28.7,39.8,33.9"
+          - abbr: bt
+            osm: bhutan
+            subdir: asia
+            bounds: "88.2,26.2,92.6,28.9"
+          - abbr: tl
+            osm: east-timor
+            subdir: asia
+            bounds: "123.5,-10.0,127.8,-7.6"
+          - abbr: uz
+            osm: uzbekistan
+            subdir: asia
+            bounds: "55.5,36.7,73.6,46.1"
+          - abbr: tw
+            osm: taiwan
+            subdir: asia
+            bounds: "117.8,21.4,122.5,25.8"
+          - abbr: sy
+            osm: syria
+            subdir: asia
+            bounds: "35.2,31.8,42.9,37.8"
+          - abbr: tm
+            osm: turkmenistan
+            subdir: asia
+            bounds: "51.9,34.6,67.1,43.3"
+          - abbr: kp
+            osm: north-korea
+            subdir: asia
+            bounds: "123.7,37.2,131.2,43.5"
+          - abbr: iq
+            osm: iraq
+            subdir: asia
+            bounds: "38.3,28.6,49.1,37.9"
+          - abbr: ilps
+            osm: israel-and-palestine
+            subdir: asia
+            bounds: "33.7,29.0,36.4,33.9"
+          - abbr: kg
+            osm: kyrgyzstan
+            subdir: asia
+            bounds: "68.7,38.7,80.8,43.8"
+          - abbr: mv
+            osm: maldives
+            subdir: asia
+            bounds: "72.2,-1.2,74.3,7.6"
+    steps:
+      - name: Free disk space (large extracts, e.g. cn/in/id ~1.5 GB each)
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL && df -h .
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Download Planetiler
+        run: |
+          curl -L -o planetiler.jar https://github.com/onthegomap/planetiler/releases/download/v0.8.0/planetiler.jar
+
+      - name: Download data sources
+        run: |
+          mkdir -p data/sources
+          cd data/sources
+          curl -L -o lake_centerline.shp.zip https://dev.maptiler.download/geodata/omt/lake_centerline.shp.zip
+          curl -L -o natural_earth_vector.sqlite.zip https://dev.maptiler.download/geodata/omt/natural_earth_vector.sqlite.zip
+          curl -L -o water-polygons-split-3857.zip https://osmdata.openstreetmap.de/download/water-polygons-split-3857.zip
+          cd ../..
+
+      - name: Download OSM data
+        if: ${{ github.event.inputs.country == 'all' || github.event.inputs.country == matrix.abbr }}
+        run: |
+          curl -L -o ${{ matrix.abbr }}.osm.pbf ${{ matrix.pbf_url || format('https://download.geofabrik.de/{0}/{1}-latest.osm.pbf', matrix.subdir, matrix.osm) }}
+
+      - name: Build tiles
+        if: ${{ github.event.inputs.country == 'all' || github.event.inputs.country == matrix.abbr }}
+        run: |
+          java -Xmx6g -jar planetiler.jar \
+            --osm_path=${{ matrix.abbr }}.osm.pbf \
+            --bounds=${{ matrix.bounds }} \
+            --output=as-${{ matrix.abbr }}.pmtiles \
+            --download_dir=data/sources \
+            --force
+
+      - name: Upload artifact
+        if: ${{ github.event.inputs.country == 'all' || github.event.inputs.country == matrix.abbr }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: as-${{ matrix.abbr }}.pmtiles
+          path: as-${{ matrix.abbr }}.pmtiles

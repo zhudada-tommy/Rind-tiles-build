@@ -1,0 +1,154 @@
+# 大洋洲 23 个提取（含 ile-de-clipperton 等小岛；tokelau/canary-islands 等 NE 无收录的用手工近似 bbox）
+name: Build Oceania Country Tiles
+
+on:
+  workflow_dispatch:
+    inputs:
+      country:
+        description: 'Country to build (e.g. au, nz) or "all"'
+        required: true
+        default: 'all'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - abbr: au
+            osm: australia
+            subdir: australia-oceania
+            bounds: "112.4,-55.3,159.6,-8.7"
+          - abbr: nz
+            osm: new-zealand
+            subdir: australia-oceania
+            bounds: "-178.5,-53.1,179.3,-8.0"
+          - abbr: pg
+            osm: papua-new-guinea
+            subdir: australia-oceania
+            bounds: "140.3,-12.1,156.5,-0.8"
+          - abbr: fj
+            osm: fiji
+            subdir: australia-oceania
+            bounds: "-180.0,-22.2,180.0,-12.0"
+          - abbr: pf
+            osm: french-polynesia
+            subdir: australia-oceania
+            bounds: "-155.0,-28.1,-134.4,-7.5"
+          - abbr: nc
+            osm: new-caledonia
+            subdir: australia-oceania
+            bounds: "163.1,-23.2,171.8,-19.1"
+          - abbr: sb
+            osm: solomon-islands
+            subdir: australia-oceania
+            bounds: "155.0,-12.8,169.3,-6.1"
+          - abbr: vu
+            osm: vanuatu
+            subdir: australia-oceania
+            bounds: "166.0,-20.8,170.4,-12.6"
+          - abbr: amo
+            osm: american-oceania
+            subdir: australia-oceania
+            bounds: "-171.6,-15.0,146.4,21.1"
+          - abbr: to
+            osm: tonga
+            subdir: australia-oceania
+            bounds: "-176.7,-22.8,-173.4,-15.1"
+          - abbr: ws
+            osm: samoa
+            subdir: australia-oceania
+            bounds: "-173.3,-14.6,-170.9,-13.0"
+          - abbr: ki
+            osm: kiribati
+            subdir: australia-oceania
+            bounds: "-175.0,-12.0,177.4,5.2"
+          - abbr: mh
+            osm: marshall-islands
+            subdir: australia-oceania
+            bounds: "164.8,4.1,172.5,15.1"
+          - abbr: fm
+            osm: micronesia
+            subdir: australia-oceania
+            bounds: "137.6,0.4,163.5,10.3"
+          - abbr: ck
+            osm: cook-islands
+            subdir: australia-oceania
+            bounds: "-166.3,-22.4,-156.8,-8.4"
+          - abbr: pw
+            osm: palau
+            subdir: australia-oceania
+            bounds: "130.6,2.4,135.2,8.6"
+          - abbr: wf
+            osm: wallis-and-futuna
+            subdir: australia-oceania
+            bounds: "-178.7,-14.8,-175.6,-12.7"
+          - abbr: nu
+            osm: niue
+            subdir: australia-oceania
+            bounds: "-170.5,-19.6,-169.3,-18.5"
+          - abbr: tv
+            osm: tuvalu
+            subdir: australia-oceania
+            bounds: "175.6,-9.9,180.0,-5.2"
+          - abbr: nr
+            osm: nauru
+            subdir: australia-oceania
+            bounds: "166.4,-1.1,167.5,0.0"
+          - abbr: tk
+            osm: tokelau
+            subdir: australia-oceania
+            bounds: "-173.3,-10.1,-170.5,-7.8"
+          - abbr: pn
+            osm: pitcairn-islands
+            subdir: australia-oceania
+            bounds: "-131.3,-25.6,-124.3,-23.4"
+          - abbr: cp
+            osm: ile-de-clipperton
+            subdir: australia-oceania
+            bounds: "-109.7,9.8,-108.7,10.8"
+    steps:
+      - name: Free disk space (large extracts, e.g. cn/in/id ~1.5 GB each)
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL && df -h .
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Download Planetiler
+        run: |
+          curl -L -o planetiler.jar https://github.com/onthegomap/planetiler/releases/download/v0.8.0/planetiler.jar
+
+      - name: Download data sources
+        run: |
+          mkdir -p data/sources
+          cd data/sources
+          curl -L -o lake_centerline.shp.zip https://dev.maptiler.download/geodata/omt/lake_centerline.shp.zip
+          curl -L -o natural_earth_vector.sqlite.zip https://dev.maptiler.download/geodata/omt/natural_earth_vector.sqlite.zip
+          curl -L -o water-polygons-split-3857.zip https://osmdata.openstreetmap.de/download/water-polygons-split-3857.zip
+          cd ../..
+
+      - name: Download OSM data
+        if: ${{ github.event.inputs.country == 'all' || github.event.inputs.country == matrix.abbr }}
+        run: |
+          curl -L -o ${{ matrix.abbr }}.osm.pbf ${{ matrix.pbf_url || format('https://download.geofabrik.de/{0}/{1}-latest.osm.pbf', matrix.subdir, matrix.osm) }}
+
+      - name: Build tiles
+        if: ${{ github.event.inputs.country == 'all' || github.event.inputs.country == matrix.abbr }}
+        run: |
+          java -Xmx6g -jar planetiler.jar \
+            --osm_path=${{ matrix.abbr }}.osm.pbf \
+            --bounds=${{ matrix.bounds }} \
+            --output=oc-${{ matrix.abbr }}.pmtiles \
+            --download_dir=data/sources \
+            --force
+
+      - name: Upload artifact
+        if: ${{ github.event.inputs.country == 'all' || github.event.inputs.country == matrix.abbr }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: oc-${{ matrix.abbr }}.pmtiles
+          path: oc-${{ matrix.abbr }}.pmtiles
