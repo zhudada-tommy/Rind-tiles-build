@@ -87,11 +87,36 @@ jobs:
 
       - name: Download data sources
         run: |
+          # 带指数退避的下载：之前委内瑞拉构建曾因水域数据服务器
+          # (osmdata.openstreetmap.de) 超时失败，改为最多 5 次重试
+          download_with_retry() {
+            local url="$1" out="$2" attempts=5 delay=10
+            for i in $(seq 1 $attempts); do
+              echo "下载 $out（第 $i/$attempts 次）..."
+              if curl -fSL --connect-timeout 30 --max-time 1800 -o "$out" "$url" && [ -s "$out" ]; then
+                echo "OK: $out"
+                return 0
+              fi
+              echo "第 $i 次失败：$out"
+              rm -f "$out"
+              if [ "$i" -lt "$attempts" ]; then
+                echo "${delay}s 后重试..."
+                sleep "$delay"
+                delay=$((delay * 2))
+              fi
+            done
+            echo "ERROR: $out 下载 $attempts 次均失败" >&2
+            return 1
+          }
           mkdir -p data/sources
           cd data/sources
-          curl -L -o lake_centerline.shp.zip https://dev.maptiler.download/geodata/omt/lake_centerline.shp.zip
-          curl -L -o natural_earth_vector.sqlite.zip https://dev.maptiler.download/geodata/omt/natural_earth_vector.sqlite.zip
-          curl -L -o water-polygons-split-3857.zip https://osmdata.openstreetmap.de/download/water-polygons-split-3857.zip
+          download_with_retry https://dev.maptiler.download/geodata/omt/lake_centerline.shp.zip lake_centerline.shp.zip
+          download_with_retry https://dev.maptiler.download/geodata/omt/natural_earth_vector.sqlite.zip natural_earth_vector.sqlite.zip
+          download_with_retry https://osmdata.openstreetmap.de/download/water-polygons-split-3857.zip water-polygons-split-3857.zip
+          # 完整性校验：防止拿到截断/损坏的 zip 就继续构建
+          for z in lake_centerline.shp.zip natural_earth_vector.sqlite.zip water-polygons-split-3857.zip; do
+            unzip -t "$z" > /dev/null || { echo "ERROR: $z 校验失败（文件损坏）" >&2; exit 1; }
+          done
           cd ../..
 
       - name: Download OSM data
