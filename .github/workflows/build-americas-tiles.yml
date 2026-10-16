@@ -109,6 +109,27 @@ jobs:
             --download_dir=data/sources \
             --force
 
+      - name: Verify PMTiles (header, zoom, layers)
+        if: ${{ github.event.inputs.country == 'all' || github.event.inputs.country == matrix.abbr }}
+        run: |
+          pip install -q pmtiles
+          python3 - <<'PY'
+          import glob, sys
+          from pmtiles.reader import Reader, MmapSource
+          bad = 0
+          for f in glob.glob('*.pmtiles'):
+              with open(f, 'rb') as fh:
+                  if fh.read(7) != b'PMTiles':
+                      print('BAD magic/zero header', f); bad += 1; continue
+                  fh.seek(0)
+                  r = Reader(MmapSource(fh)); h = r.header(); md = r.metadata()
+                  layers = [l['id'] for l in md.get('vector_layers', [])]
+                  print(f, 'z%d-%d' % (h['min_zoom'], h['max_zoom']), len(layers), 'layers', layers)
+                  if h['max_zoom'] < 14 or 'water' not in layers or len(layers) < 9:
+                      print('BAD zoom/layers', f); bad += 1
+          sys.exit(1 if bad else 0)
+          PY
+
       - name: Upload artifact
         if: ${{ github.event.inputs.country == 'all' || github.event.inputs.country == matrix.abbr }}
         uses: actions/upload-artifact@v4
